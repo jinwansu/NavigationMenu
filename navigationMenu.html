@@ -1,0 +1,229 @@
+<script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+<script type="text/javascript">
+
+var currentIndex = 0;
+var currentScrollHigh = 0;
+var currentContentScrollHigh = 0;
+
+$(window).onbeforeunload = function(){ 
+	currentIndex = 0;
+}
+
+$(window).load(function(){
+    var h1s = $("body").find("h1");
+    var h2s = $("body").find("h2");
+    var h3s = $("body").find("h3");
+
+    var headCounts = [h1s.length, h2s.length, h3s.length];
+    var vH1Tag = null;  // 显示的最高层级
+    var vH2Tag = null;   // 显示的最低层级
+	var sum = 0;
+
+    for(var i = 0; i < headCounts.length; i++){
+            if(headCounts[i] > 0){
+            for( var y = 0; y < headCounts[i]; y++)
+                    sum = sum + 1;
+            }
+    }
+
+    for(var i = 0; i < headCounts.length; i++){
+        if(headCounts[i] > 0){
+            if(vH1Tag == null){
+                vH1Tag = 'h' + (i + 1);
+            }else{
+                vH2Tag = 'h' + (i + 1);
+            }
+        }
+    }
+
+    if(vH1Tag == null){
+        return;
+    }
+
+    $("body").prepend('<div class="BlogAnchor">' + 
+        '<p>' + 
+            '<b id="AnchorContentHeadPadding"></b>' + 
+        '</p>' + 
+        '<div class="AnchorContent" id="AnchorContent"> </div>' + 
+    '</div>' );
+
+    var vH1Index = 0;
+    var vH2Index = 0;
+
+    var vIndexH1 = 0;
+    var vIndexH2 = 0;
+    var vIndexH3 = 0;
+    var headerALL = [];
+    var headerIDALL = [];
+    var headerHightALL = [];
+
+    $("body").find("h1,h2,h3").each(function(i,item){
+
+        var id = '';
+        var tag = $(item).get(0).tagName.toLowerCase();
+        var className = '';
+        // i=0 tag=h1          i=1 tag=h2     i=2 tag=h2
+
+        if(tag == "h1"){
+            id = ++vIndexH1;
+    	    vIndexH2 = 0;
+    	    vIndexH3 = 0;
+    	    className = 'item_h1';
+
+            //alert("tag ="+ tag +"----   i = "+ i + "    className= "+ className);
+            //tag =h1----   i = 0 className= item_h1
+        }else if(tag == "h2"){
+
+            id = vIndexH1 + '_' + ++vIndexH2;
+            className = 'item_h2'; 
+            vIndexH3 = 0;
+
+        }else if(tag == "h3"){
+            id = vIndexH1 + '_' + vIndexH2+ '_' + ++vIndexH3;
+            className = 'item_h3'; 
+        }
+
+        $(item).attr("id","wow"+id+"_index_"+i);
+        $(item).addClass("wow_head");
+        var itemHeight = $(item).offset().top
+        $("#AnchorContent").css('max-height', ($(document).height()) + 'px');
+        $("#AnchorContent").css('height', ($(window).height()) + 'px');
+        $("#AnchorContent").css('overflow','auto');
+        $("#AnchorContent").append('<li><a class="nav_item '+className+' anchor-link"  href="#wow'+id+'_index_'+i+'" link="#wow'+id+'" index="'+i+'">'+" "+$(this).text()+" "+'</a></li>');
+        var str = "#wow"+id+"_index_"+i;
+        headerALL.push($(item));
+        headerIDALL.push(str);
+        console.log("  i = "+ i +"   id =" + id +"  itemHeight = "+ itemHeight);
+    });
+
+	$(".anchor-link").click(function(){        
+        var index  = $(this).attr("index");
+        $(".BlogAnchor li .nav_item.current").removeClass('current');
+        $(headerNavs[index]).addClass('current');
+        var scrollTop = $(window).scrollTop(); // 获得将要到达的点离顶距离
+        currentScrollHigh = scrollTop;
+        currentContentScrollHigh = headerHightALL[index];
+        var value = headerTops[index];
+        currentIndex = value;
+        console.log("index = "+ index+ "  headerTops["+index+"] ="+ value + "scrollTop="+ scrollTop);
+    });
+
+    var headerNavs = $(".BlogAnchor li .nav_item");
+    var headerTops = [];
+    var mHeight = 0;
+
+    $(".wow_head").each(function(i, n){
+        var value = $(n).offset().top;
+        headerTops.push($(n).offset().top);
+        console.log("i = "+ i+ "  offset().top ="+ value);
+    });
+
+    headerTops.push($(document).height());
+
+	window.onresize = function(){
+	    headerTops = [];
+	    $.each(headerNavs, function(i, n){
+	        $(n).trigger("click"); 
+	        document.querySelector(headerIDALL[i]).scrollIntoView(true);
+	        //var high = $(n).offset().top;
+	        var scrollTop = $(window).scrollTop();
+	        headerTops.push(scrollTop);
+	        console.log("headerNavs_index="+i +"   scrollTop="+scrollTop +"  headerTops="+headerTops[i]);
+	    });
+	    headerTops.push($(document).height());
+        
+	    $("#AnchorContent").css('height', ($(window).height()) + 'px');
+	    var xcontentWidth =  $("#AnchorContent").width();
+	    var xWidth = $(window).width();
+	    var xlength = xWidth - xcontentWidth;
+	    $("body").css("marginLeft",xcontentWidth+'px');
+	    $("body").css("max-width",xlength);
+
+	    $(headerNavs[currentIndex]).trigger("click"); 
+	    document.querySelector(headerIDALL[i]).scrollIntoView(true);
+	}
+
+	$.each(headerNavs, function(i, n){
+	    var high = $(n).offset().top;
+	    headerHightALL.push(high);
+	    console.log("high"+high);
+	});
+
+	headerTops = [];
+	$.each(headerNavs, function(i, n){
+	    $(n).trigger("click"); 
+	    document.querySelector(headerIDALL[i]).scrollIntoView(true);
+
+	    var scrollTop = $(window).scrollTop();
+	    headerTops.push(scrollTop);
+	    console.log("headerNavs_index="+i +"   scrollTop="+scrollTop +"  headerTops="+headerTops[i]);
+    });
+
+	headerTops.push($(document).height());
+	$(headerNavs[0]).trigger("click"); 
+	document.querySelector(headerIDALL[0]).scrollIntoView(true);
+
+	var xcontentWidth =  $("#AnchorContent").width();
+	var xWidth = $(window).width();
+	var xlength = xWidth - xcontentWidth;
+	$("body").css("marginLeft",xcontentWidth+'px');
+	$("body").css("max-width",xlength);
+});
+
+</script>
+<style>
+    /*导航*/
+    .BlogAnchor {
+        //background: #f1f1f1;
+        background: #ffffff;
+        //padding: 10px;
+        line-height: 180%;
+        position: fixed;
+        left: 0px;   // right: 48px;  
+        top: 0px;
+        border: 1px solid #aaaaaa;
+        width: 20%;
+        height:100%;
+    }
+    .BlogAnchor p {
+        font-size: 18px;
+        margin: 0 0 0.3rem 0;
+        text-align: right;
+    }
+    .BlogAnchor .AnchorContent {
+        //padding: 5px 0px;
+        overflow: auto;
+
+    }
+    .BlogAnchor li{
+        text-indent: 0.5rem;
+        font-size: 14px;
+        list-style: none;
+    }
+    .BlogAnchor li .nav_item{
+        padding: 3px;
+    }
+    .BlogAnchor li .item_h1{
+        margin-left: 0rem;
+    }
+    .BlogAnchor li .item_h2{
+        margin-left: 2rem;
+        font-size: 0.8rem;
+    }
+
+    .BlogAnchor li .item_h3{
+        margin-left: 4rem;
+        font-size: 0.8rem;
+    }
+
+    .BlogAnchor li .nav_item.current{
+    }
+    #AnchorContentHeadPadding {
+        font-size: 13px;
+        font-weight: normal;
+        display: inline-block;
+        line-height: 20px;
+        font-style: normal;
+        padding: 1px 8px;
+    }
+</style>
